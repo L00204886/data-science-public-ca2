@@ -1,0 +1,4 @@
+distance_band,n_Economy,n_Economy Plus,n_Business,mean_comfort_Economy,mean_comfort_Economy Plus,mean_comfort_Business,kw_H,eps_sq,business_premium_unadjusted,business_premium_distance_adjusted
+Short (<800 mi),36860,6054,19604,3.119,3.133,3.506,2149.3,0.0344,0.522,0.486
+Medium (800-2000 mi),18886,2869,18740,3.104,3.103,3.642,3102.7,0.0766,0.522,0.486
+Long (>2000 mi),2563,488,23816,3.083,3.095,3.735,1321,0.0492,0.522,0.486

@@ -1,0 +1,14 @@
+item,n_not_applicable,sat_pct_answered,sat_pct_not_applicable,cramers_v
+departure_and_arrival_time_convenience,6681,43.2,48.1,0.0219
+ease_of_online_booking,5682,42.4,66.6,0.0997
+inflight_wifi_service,3916,41.7,99.7,0.2003
+online_boarding,3080,43.1,56.5,0.0409
+leg_room_service,598,43.5,34.4,0.0123
+food_and_drink,132,43.4,41.7,0.0011
+inflight_entertainment,18,43.5,0,0.0103
+cleanliness,14,43.5,0,0.0091
+onboard_service,5,43.4,0,0.0054
+inflight_service,5,43.4,0,0.0054
+checkin_service,1,43.4,0,0.0024
+gate_location,1,43.4,100,0.0032
+seat_comfort,1,43.4,0,0.0024

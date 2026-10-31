@@ -1,0 +1,19 @@
+variable,level,count,percentage
+satisfaction,Neutral or Dissatisfied,73452,56.55
+satisfaction,Satisfied,56428,43.45
+type_of_travel,Business,89693,69.06
+type_of_travel,Personal,40187,30.94
+class,Business,62160,47.86
+class,Economy,58309,44.89
+class,Economy Plus,9411,7.25
+customer_type,First-time,23780,18.31
+customer_type,Returning,106100,81.69
+gender,Female,65899,50.74
+gender,Male,63981,49.26
+delay_category,Major Delay (>15 mins),29727,22.89
+delay_category,Minor Delay (1-15 mins),27400,21.1
+delay_category,On Time (0 mins),72753,56.02
+age_group,25-40,42610,32.81
+age_group,41-60,52554,40.46
+age_group,Over 60,10054,7.74
+age_group,Under 25,24662,18.99

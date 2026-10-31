@@ -1,0 +1,6 @@
+RQ,Research_Focus,Primary_Test,Test_Statistic,p_value,Effect_Size,Decision
+RQ1,Online Boarding Rating by Satisfaction,Wilcoxon Rank-Sum (Mann-Whitney U),W = 3.291e+09 (t = 248.05),<2e-16,r_rb = 0.669; Cohen's d = 1.383 (Large),Reject H0
+RQ2,Type of Travel vs. Overall Satisfaction,Pearson's Chi-Square Test of Independence,Chi2(1) = 26284.5,<2e-16,Cramer's V = 0.450; OR = 12.44 (Large),Reject H0
+RQ3,Engineered In-Flight Comfort across Cabin Class,Kruskal-Wallis + Bonferroni Post-Hoc,H(2) = 9474.1 (F = 4867.3),<2e-16,Epsilon^2 = 0.073 (Moderate; Eco vs Eco+ p = 1.00),Reject H0
+RQ4,Arrival Delay Duration by Satisfaction,Wilcoxon Rank-Sum & Welch Two-Sample t-test,W = 2.292e+09 (t = 21.29),<2e-16,r_rb = 0.106; Cohen's d = 0.117 (Small),Reject H0
+RQ5,Departure Delay vs. Arrival Delay Collinearity,Pearson's r & Spearman's Rank Correlation,r = 0.9653 (t = 1329.9); rho = 0.7403,<2e-16,R^2 = 0.932; VIF = 14.66 (Near-Perfect Collinearity),Reject H0

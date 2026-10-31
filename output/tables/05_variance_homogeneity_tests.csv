@@ -1,0 +1,4 @@
+research_question,bartlett_K2,bartlett_p,fligner_chi2,fligner_p,variance_conclusion
+RQ1: Online Boarding ~ Satisfaction,928.74,<2e-16,2391.38,<2e-16,Heteroscedastic (Unequal Variances)
+RQ3: Inflight Comfort Score ~ Cabin Class,223.46,<2e-16,417.17,<2e-16,Heteroscedastic (Unequal Variances)
+RQ4: Arrival Delay ~ Satisfaction,1112.85,<2e-16,1161.34,<2e-16,Heteroscedastic (Unequal Variances)

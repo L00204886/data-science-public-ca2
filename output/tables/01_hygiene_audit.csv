@@ -1,0 +1,25 @@
+variable,raw_name,r_class_raw,na_count,na_pct,zero_count,zero_pct
+id,ID,numeric,0,0,0,0
+gender,Gender,character,0,0,0,0
+age,Age,numeric,0,0,0,0
+customer_type,Customer Type,character,0,0,0,0
+type_of_travel,Type of Travel,character,0,0,0,0
+class,Class,character,0,0,0,0
+flight_distance,Flight Distance,numeric,0,0,0,0
+departure_delay,Departure Delay,numeric,0,0,0,0
+arrival_delay,Arrival Delay,numeric,393,0.303,0,0
+departure_and_arrival_time_convenience,Departure and Arrival Time Convenience,numeric,0,0,6681,5.144
+ease_of_online_booking,Ease of Online Booking,numeric,0,0,5682,4.375
+checkin_service,Check-in Service,numeric,0,0,1,0.001
+online_boarding,Online Boarding,numeric,0,0,3080,2.371
+gate_location,Gate Location,numeric,0,0,1,0.001
+onboard_service,On-board Service,numeric,0,0,5,0.004
+seat_comfort,Seat Comfort,numeric,0,0,1,0.001
+leg_room_service,Leg Room Service,numeric,0,0,598,0.46
+cleanliness,Cleanliness,numeric,0,0,14,0.011
+food_and_drink,Food and Drink,numeric,0,0,132,0.102
+inflight_service,In-flight Service,numeric,0,0,5,0.004
+inflight_wifi_service,In-flight Wifi Service,numeric,0,0,3916,3.015
+inflight_entertainment,In-flight Entertainment,numeric,0,0,18,0.014
+baggage_handling,Baggage Handling,numeric,0,0,0,0
+satisfaction,Satisfaction,character,0,0,0,0

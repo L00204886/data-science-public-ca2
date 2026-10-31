@@ -1,0 +1,5 @@
+composite,n_items,items,cronbach_alpha,verdict
+inflight_comfort_score,4,seat_comfort + leg_room_service + cleanliness + inflight_entertainment,0.742,Acceptable (>= 0.70)
+digital_service_score,3,ease_of_online_booking + online_boarding + inflight_wifi_service,0.754,Acceptable (>= 0.70)
+ground_service_score,4,departure_and_arrival_time_convenience + gate_location + checkin_service + baggage_handling,0.425,Unreliable (< 0.70)
+ground_handling_2item,2,checkin_service + baggage_handling,0.379,Unreliable (< 0.70)

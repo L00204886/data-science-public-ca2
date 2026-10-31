@@ -1,0 +1,7 @@
+class,type_of_travel,n,satisfied_pct
+Economy,Personal,33005,10.2
+Economy,Business,25304,29.9
+Economy Plus,Personal,4509,8.7
+Economy Plus,Business,4902,39.3
+Business,Personal,2673,11.7
+Business,Business,59487,72

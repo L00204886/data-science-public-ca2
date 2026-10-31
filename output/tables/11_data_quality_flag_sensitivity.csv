@@ -1,0 +1,4 @@
+sample,n,rq2_cramers_v,rq2_odds_ratio
+Full sample,129880,0.4499,12.4367
+Excluding under-16 Business rows,127746,0.4561,12.7735
+Excluding straight-liners,129847,0.4498,12.4329

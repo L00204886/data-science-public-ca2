@@ -1,0 +1,9 @@
+variable,n_full,skewness,kurtosis,shapiro_W_n5000,shapiro_p_value,ks_D_full,ks_p_value,normality_conclusion
+online_boarding,126800,-0.343,-0.949,0.8961,<2e-16,0.2096,<2e-16,Reject Normality (Non-Normal)
+inflight_comfort_score,129880,-0.346,-0.769,0.9622,<2e-16,0.1086,<2e-16,Reject Normality (Non-Normal)
+digital_service_score,128277,-0.031,-0.678,0.9666,<2e-16,0.0908,<2e-16,Reject Normality (Non-Normal)
+ground_service_score,129880,-0.169,-0.446,0.985,<2e-16,0.0751,<2e-16,Reject Normality (Non-Normal)
+arrival_delay,129880,6.641,94.047,0.4172,<2e-16,0.3472,<2e-16,Reject Normality (Non-Normal)
+departure_delay,129880,6.822,100.639,0.4124,<2e-16,0.3496,<2e-16,Reject Normality (Non-Normal)
+flight_distance,129880,1.108,0.265,0.8673,<2e-16,0.1582,<2e-16,Reject Normality (Non-Normal)
+age,129880,-0.004,-0.719,0.9872,<2e-16,0.0545,<2e-16,Reject Normality (Non-Normal)
