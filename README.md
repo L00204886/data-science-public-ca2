@@ -3,10 +3,10 @@
 **Module:** DATA_IT904 - Data Science (2026/27)
 **Assessment:** CA 2 - Data Analysis (30% of the module)
 **Author:** Eamon Foy (L00204886)
-**Repository:** [https://github.com/eamonfoy/CA2](https://github.com/eamonfoy/CA2)
+
 
 This repository holds the R scripts, outputs, tables/figures  for CA 2.
-All analysis is done in R. 
+All analysis is done in R.
 
 ## What the assignment covers
 
@@ -163,4 +163,3 @@ Rscript scripts/run_all_ca2.R                      # run the whole pipeline
 | `data/airline_passenger_satisfaction.csv not found`           | Run `make` from the project root, not from `scripts/`                                                                 |
 | `missing separator` or odd `\r` errors from make on Windows | The Makefile was checked out with Windows line endings. Run `git config core.autocrlf false`, then re-checkout the file |
 | Package install fails on Windows asking for a compiler          | Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) matching your R version and retry                         |
-
