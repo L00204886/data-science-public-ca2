@@ -8,7 +8,7 @@
 #                1. Audit missing (NA) values and "0" (Not Applicable) ratings
 #                2. Clean: regression-impute arrival_delay, recode 0 -> NA (keeping
 #                   indicator flags), flag implausible rows, build new variables
-#                3. Check composite reliability (Cronbach's alpha) and save the
+#                3. Check composite reliability and save the
 #                   descriptive tables
 #                4. Draw the exploratory charts (Figures 1-4)
 # Reads:       data/airline_passenger_satisfaction.csv
@@ -40,7 +40,7 @@ cat(sprintf(
   format(nrow(raw_df), big.mark = ","), ncol(raw_df)
 ))
 
-# 1.1 Standardise column names to snake_case
+# Standardise column names to snake_case
 clean_col_names <- function(nms) {
   nms |>
     str_to_lower() |>
@@ -58,7 +58,7 @@ colnames(df) <- clean_col_names(colnames(df))
 dup_ids <- sum(duplicated(df$id))
 cat(sprintf("Duplicate Passenger IDs: %d\n", dup_ids))
 
-# 1.2 Audit raw missing (NA) and "0" (Not Applicable) codes in Likert ratings
+# Audit raw missing (NA) and "0" (Not Applicable) codes in Likert ratings
 likert_cols <- c(
   "departure_and_arrival_time_convenience",
   "ease_of_online_booking",
@@ -90,14 +90,16 @@ hygiene_audit <- tibble(
 
 write_csv(hygiene_audit, "output/tables/01_hygiene_audit.csv")
 show_table("Columns with missing (NA) or Not Applicable (0) values",
-           hygiene_audit |> filter(na_count > 0 | zero_count > 0), n = 25)
+  hygiene_audit |> filter(na_count > 0 | zero_count > 0),
+  n = 25
+)
 
 banner("STEP 2: CLEANING, IMPUTATION & FEATURE ENGINEERING")
 
-# 2.1 Drop non-predictive identifier column (id)
+# Drop non-predictive identifier column (id)
 df_clean <- df |> select(-id)
 
-# 2.2 Handle the 393 missing values in arrival_delay
+# Handle the 393 missing values in arrival_delay
 # The median (0 mins) would wrongly label late flights as "On Time": these 393
 # flights have a median departure delay of 8 mins. Departure and arrival delay
 # are almost perfectly linear (r ~ 0.965, see RQ5), so I impute by regression:
@@ -147,7 +149,7 @@ cat(sprintf(
   mean(df_clean$arrival_delay[df_clean$arrival_delay_imputed_flag])
 ))
 
-# 2.3 Recode 0 ("Not Applicable") in the 14 Likert survey columns to NA
+# Recode 0 ("Not Applicable") in the 14 Likert survey columns to NA
 # A 0 means the passenger did not use the service; left as a number it would
 # drag averages down. Skipping is not random though (Wi-Fi skippers are ~99.7%
 # satisfied, see script 04), so I first keep a TRUE/FALSE "<item>_na" indicator
@@ -164,7 +166,7 @@ df_clean <- df_clean |>
 cat("Passengers by number of 'Not Applicable' items:\n")
 print(table(df_clean$n_not_applicable))
 
-# 2.3b Data-quality flags (rows are flagged, not deleted)
+# Data-quality flags (rows are flagged, not deleted)
 # - flag_minor_business: under-16s recorded as Business travel or class
 #   (implausible, possibly data-entry errors).
 # - flag_straight_liner: same rating given to every answered item (low effort).
@@ -185,7 +187,7 @@ cat(sprintf(
   sum(df_clean$flag_minor_business), sum(df_clean$flag_straight_liner)
 ))
 
-# 2.3c Capped (winsorised) arrival delay for outlier sensitivity checks
+# Capped arrival delay for outlier sensitivity checks
 # ------------------------------------------------------------------------------
 # Around 300 flights have delays > 5 hours (max 1,584 mins). Rank-based tests are
 # robust to these, but means and t-tests are not. I created a copy capped at the
@@ -199,7 +201,7 @@ cat(sprintf(
   cap_p99, sum(df_clean$arrival_delay > cap_p99)
 ))
 
-# 2.4 Feature Engineering (Creating New Variables to Answer Research Questions)
+# Feature Engineering
 # - inflight_comfort_score: composite mean of Seat Comfort, Leg Room Service, Cleanliness, Inflight Entertainment (RQ3)
 # - digital_service_score: composite mean of Ease of Online Booking, Online Boarding, Inflight Wifi Service
 # - ground_service_score: composite mean of Gate Location, Checkin Service, Baggage Handling, Time Convenience
@@ -239,7 +241,7 @@ df_clean <- df_clean |>
     ) |> factor(levels = c("Under 25", "25-40", "41-60", "Over 60"), ordered = TRUE)
   )
 
-# 2.5 Encode Nominal and Ordered Categorical Factors
+# Encode Nominal and Ordered Categorical Factors
 df_clean <- df_clean |>
   mutate(
     gender = factor(gender, levels = c("Female", "Male")),
@@ -252,11 +254,11 @@ df_clean <- df_clean |>
 cat("Engineered Variables Summary:\n")
 print(summary(df_clean |> select(inflight_comfort_score, digital_service_score, ground_service_score, delay_category)))
 
-# 2.5b Internal-consistency reliability of the composite scores (Cronbach's alpha)
+# Internal-consistency reliability of the composite scores
 # ------------------------------------------------------------------------------
 # Averaging several survey items into one score only makes sense if the items
 # measure the same underlying idea. Cronbach's alpha checks this:
-#   alpha >= 0.70  -> acceptable reliability (Nunnally, 1978 rule of thumb)
+#   alpha >= 0.70  -> acceptable reliability
 #   alpha <  0.70  -> items do not hang together; the composite is unreliable
 # I also tested a reduced 2 item "ground handling" alternative (check-in +
 # baggage) because the original 4 item ground score was expected to be weak.
@@ -280,7 +282,7 @@ reliability_table <- imap_dfr(composite_items, function(items, name) {
 write_csv(reliability_table, "output/tables/03b_composite_reliability.csv")
 show_table("Composite score reliability (Cronbach's alpha)", reliability_table)
 
-# 2.6 Descriptive Statistics Table across Continuous, Engineered, and Ordinal Variables
+# Descriptive Statistics Table
 desc_vars <- c(
   "age", "flight_distance", "departure_delay", "arrival_delay",
   "online_boarding", "ease_of_online_booking", "inflight_wifi_service",
@@ -445,7 +447,7 @@ save_figure_png("fig02_service_ratings_by_satisfaction.png", width = 10, height 
 })
 
 # ------------------------------------------------------------------------------
-# Figure 3: Multi-Panel Demographic & Travel Regime Breakdown (2x2 Panel)
+# Figure 3: Multi-Panel Demographic & Travel Regime Breakdown (a 2x2 Panel)
 # ------------------------------------------------------------------------------
 save_figure_png("fig03_categorical_satisfaction_breakdown.png", width = 10, height = 7, plot_fn = function() {
   par(mfrow = c(2, 2), mar = c(4.5, 4.5, 3, 1.5), family = "sans")

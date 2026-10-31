@@ -3,7 +3,7 @@
 # Assessment:  CA 2 - Statistical Data Analysis & Hypothesis Testing
 # Author:      Eamon Foy (L00204886)
 # Script:      run_all_ca2.R
-# Description: Master execution pipeline that runs all CA 2 R analysis scripts
+# Description: Master execution pipeline that runs all analysis scripts
 #              in sequence, with a clear heading per stage, execution timing
 #              and defensive root guards. Run from the project root:
 #                make run        (checks prerequisites first), or
@@ -12,7 +12,7 @@
 
 # Defensive pre-flight check: ensure working directory is project root
 if (!file.exists("data/airline_passenger_satisfaction.csv")) {
-  stop("Please run this script from the project root directory (e.g., setwd('.../CA2')).")
+  stop("Please run this script from the project root directory.")
 }
 
 source("scripts/console_helpers.R")

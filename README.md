@@ -1,8 +1,8 @@
 # CA2: Statistical Analysis and Hypothesis Testing of Airline Passenger Satisfaction
 
-**Module:** DATA_IT904 - Data Science (2026/27)
-**Assessment:** CA 2 - Data Analysis (30% of the module)
-**Author:** Eamon Foy (L00204886)
+**Module:** DATA_IT904 - Data Science (2026/27). 
+**Assessment:** CA 2 - Data Analysis (30% of the module). 
+**Author:** Eamon Foy (L00204886). 
 
 This repository holds the R scripts, outputs, tables/figures  for CA 2.
 All analysis is done in R.
