@@ -4,7 +4,6 @@
 **Assessment:** CA 2 - Data Analysis (30% of the module)
 **Author:** Eamon Foy (L00204886)
 
-
 This repository holds the R scripts, outputs, tables/figures  for CA 2.
 All analysis is done in R.
 
