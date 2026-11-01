@@ -28,27 +28,7 @@ df_clean <- readRDS("output/cleaned_airline_satisfaction.rds")
 col_dissat <- "#D95F02"
 col_sat <- "#1B9E77"
 
-save_figure_png <- function(filename, width = 9.5, height = 5.5, res = 300, plot_fn) {
-  p_out <- file.path("output/figures", filename)
-  png(p_out, width = width, height = height, units = "in", res = res)
-  tryCatch({
-    plot_fn()
-  }, finally = {
-    dev.off()
-  })
-  cat(sprintf("Saved chart: %s\n", filename))
-}
 
-# Effect-size helpers used by RQ1 and RQ4
-# Rank-biserial correlation from the Wilcoxon U statistic: r_rb = 2U / (n1 * n2) - 1
-rank_biserial_from_U <- function(U, n1, n2) 2 * U / (as.numeric(n1) * as.numeric(n2)) - 1
-# Cohen's d using the pooled standard deviation of the two groups
-cohens_d <- function(x, y) {
-  sd_pool <- sqrt(((length(x) - 1) * var(x) + (length(y) - 1) * var(y)) / (length(x) + length(y) - 2))
-  (mean(x) - mean(y)) / sd_pool
-}
-# p-value text for the console output (R reports tiny p-values as 0)
-p_text <- function(p) if (p < 2.2e-16) "p < 2.2e-16" else sprintf("p = %.3g", p)
 
 banner("RQ1: ONLINE BOARDING RATINGS BY PASSENGER SATISFACTION")
 # Variables: online_boarding (Ordinal 1-5) vs satisfaction (Binary Factor)

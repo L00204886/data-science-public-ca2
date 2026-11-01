@@ -31,24 +31,6 @@ df_clean <- readRDS("output/cleaned_airline_satisfaction.rds")
 # The 14 Likert items are the ones script 01 created a "<item>_na" indicator for
 likert_cols <- sub("_na$", "", grep("_na$", names(df_clean), value = TRUE))
 
-# Small helpers ----------------------------------------------------------------
-# Cramer's V for any r x c contingency table: V = sqrt(chi2 / (N * (min(r,c) - 1)))
-cramers_v <- function(tab) {
-  chi <- suppressWarnings(chisq.test(tab, correct = FALSE))
-  sqrt(as.numeric(chi$statistic) / (sum(tab) * (min(dim(tab)) - 1)))
-}
-# Rank-biserial correlation from a Wilcoxon test of x vs y
-# (as.numeric avoids integer overflow: n1 * n2 is over 2 billion here)
-rank_biserial <- function(x, y) {
-  w <- wilcox.test(x, y, exact = FALSE)
-  2 * as.numeric(w$statistic) / (as.numeric(length(x)) * as.numeric(length(y))) - 1
-}
-# Pooled-SD Cohen's d for x vs y
-cohens_d <- function(x, y) {
-  sp <- sqrt(((length(x) - 1) * var(x) + (length(y) - 1) * var(y)) / (length(x) + length(y) - 2))
-  (mean(x) - mean(y)) / sp
-}
-sat_rate <- function(s) mean(s == "Satisfied") * 100
 
 banner("S1: IS 'NOT APPLICABLE' MISSINGNESS INFORMATIVE?")
 # If passengers who skip a question have a different satisfaction rate from
@@ -57,7 +39,9 @@ banner("S1: IS 'NOT APPLICABLE' MISSINGNESS INFORMATIVE?")
 # columns created in script 01 carry real information.
 missing_info <- map_dfr(likert_cols, function(col) {
   flag <- df_clean[[paste0(col, "_na")]]
-  if (sum(flag) == 0) return(NULL) # no 0s for this item, so it is left out of the table
+  if (sum(flag) == 0) {
+    return(NULL)
+  } # no 0s for this item, so it is left out of the table
   tab <- table(flag, df_clean$satisfaction)
   tibble(
     item = col,
@@ -70,8 +54,10 @@ missing_info <- map_dfr(likert_cols, function(col) {
 
 # Overall comparison: any skipped item vs none
 any_na <- df_clean$n_not_applicable > 0
-cat(sprintf("Satisfied %% | no skipped items: %.1f%% | >= 1 skipped item: %.1f%%\n",
-            sat_rate(df_clean$satisfaction[!any_na]), sat_rate(df_clean$satisfaction[any_na])))
+cat(sprintf(
+  "Satisfied %% | no skipped items: %.1f%% | >= 1 skipped item: %.1f%%\n",
+  sat_rate(df_clean$satisfaction[!any_na]), sat_rate(df_clean$satisfaction[any_na])
+))
 write_csv(missing_info, "output/tables/07_missingness_informativeness.csv")
 show_table("Satisfaction (%) when an item is answered vs. Not Applicable", missing_info)
 
@@ -92,9 +78,11 @@ class_travel <- df_clean |>
   arrange(class, type_of_travel)
 show_table("% satisfied by cabin class and travel type", class_travel)
 write_csv(class_travel, "output/tables/09_class_by_travel_satisfaction.csv")
-cat(sprintf("CMH chi2 = %.2f, df = %d, p = %s | Class-adjusted common OR = %.2f (95%% CI [%.2f, %.2f])\n",
-            cmh$statistic, cmh$parameter, format.pval(cmh$p.value, eps = 2.2e-16),
-            cmh$estimate, cmh$conf.int[1], cmh$conf.int[2]))
+cat(sprintf(
+  "CMH chi2 = %.2f, df = %d, p = %s | Class-adjusted common OR = %.2f (95%% CI [%.2f, %.2f])\n",
+  cmh$statistic, cmh$parameter, format.pval(cmh$p.value, eps = 2.2e-16),
+  cmh$estimate, cmh$conf.int[1], cmh$conf.int[2]
+))
 
 banner("S4: UNUSED DEMOGRAPHICS - CUSTOMER TYPE, AGE GROUP, GENDER")
 # Chi-square tests of independence with Cramer's V. Gender is expected to be a
@@ -136,9 +124,11 @@ flag_check <- imap_dfr(flag_samples, function(d, label) {
     rq2_odds_ratio = round(or_2x2(tab), 4)
   )
 })
-cat(sprintf("Flagged under-16 Business rows: %d | Straight-liners: %d (%.0f%% satisfied)\n",
-            sum(df_clean$flag_minor_business), sum(df_clean$flag_straight_liner),
-            sat_rate(df_clean$satisfaction[df_clean$flag_straight_liner])))
+cat(sprintf(
+  "Flagged under-16 Business rows: %d | Straight-liners: %d (%.0f%% satisfied)\n",
+  sum(df_clean$flag_minor_business), sum(df_clean$flag_straight_liner),
+  sat_rate(df_clean$satisfaction[df_clean$flag_straight_liner])
+))
 write_csv(flag_check, "output/tables/11_data_quality_flag_sensitivity.csv")
 show_table("RQ2 with flagged rows excluded", flag_check)
 
@@ -190,7 +180,8 @@ banner("S8: RQ3 - IS THE COMFORT GAP A FLIGHT-LENGTH EFFECT?")
 # model with log(distance) as a covariate and compared the class coefficients.
 df_rq3 <- df_clean |>
   mutate(distance_band = cut(flight_distance, c(0, 800, 2000, Inf),
-                             labels = c("Short (<800 mi)", "Medium (800-2000 mi)", "Long (>2000 mi)")))
+    labels = c("Short (<800 mi)", "Medium (800-2000 mi)", "Long (>2000 mi)")
+  ))
 rq3_by_band <- df_rq3 |>
   summarise(n = n(), mean_comfort = round(mean(inflight_comfort_score), 3), .by = c(distance_band, class)) |>
   arrange(distance_band, class) |>
@@ -212,10 +203,14 @@ rq3_by_band <- left_join(rq3_by_band, band_kw, by = "distance_band")
 lm_df <- df_rq3 |> mutate(class = factor(class, ordered = FALSE))
 lm_raw <- lm(inflight_comfort_score ~ class, data = lm_df)
 lm_adj <- lm(inflight_comfort_score ~ class + log(flight_distance), data = lm_df)
-cat(sprintf("Business vs Economy comfort premium: unadjusted = %.3f | adjusted for log(distance) = %.3f\n",
-            coef(lm_raw)["classBusiness"], coef(lm_adj)["classBusiness"]))
-cat(sprintf("Economy Plus vs Economy: unadjusted = %.3f | adjusted = %.3f\n",
-            coef(lm_raw)["classEconomy Plus"], coef(lm_adj)["classEconomy Plus"]))
+cat(sprintf(
+  "Business vs Economy comfort premium: unadjusted = %.3f | adjusted for log(distance) = %.3f\n",
+  coef(lm_raw)["classBusiness"], coef(lm_adj)["classBusiness"]
+))
+cat(sprintf(
+  "Economy Plus vs Economy: unadjusted = %.3f | adjusted = %.3f\n",
+  coef(lm_raw)["classEconomy Plus"], coef(lm_adj)["classEconomy Plus"]
+))
 rq3_by_band <- rq3_by_band |>
   mutate(
     business_premium_unadjusted = round(coef(lm_raw)["classBusiness"], 3),

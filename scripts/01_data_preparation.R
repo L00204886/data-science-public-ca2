@@ -124,6 +124,7 @@ cat(sprintf(
   length(na_arr_dep), median(na_arr_dep), mean(na_arr_dep)
 ))
 
+# Create a linear regression model to predict arrival delay based on departure delay
 impute_model <- lm(arrival_delay ~ departure_delay, data = df_clean)
 b_imp <- coef(impute_model)
 cat(sprintf(
@@ -131,6 +132,7 @@ cat(sprintf(
   b_imp[1], b_imp[2], summary(impute_model)$r.squared
 ))
 
+# Perform the imputation
 df_clean <- df_clean |>
   mutate(
     arrival_delay_raw = arrival_delay, # untouched original (393 NAs)
@@ -170,13 +172,14 @@ print(table(df_clean$n_not_applicable))
 # - flag_minor_business: under-16s recorded as Business travel or class
 #   (implausible, possibly data-entry errors).
 # - flag_straight_liner: same rating given to every answered item (low effort).
-# Their effect on the results is checked in script 04 (S5).
-# Vectorized row-comparison via pmin/pmax avoids slow apply(..., 1) over 129k rows
+# Their effect on the results is checked in script 04.
+# Vectorized row-comparison via pmin/pmax
 likert_sub <- df_clean[, likert_cols]
 n_answered <- rowSums(!is.na(likert_sub))
 r_min <- do.call(pmin, c(likert_sub, na.rm = TRUE))
 r_max <- do.call(pmax, c(likert_sub, na.rm = TRUE))
 
+# Apply the flags to remove implausible rows
 df_clean <- df_clean |>
   mutate(
     flag_minor_business = age < 16 & (type_of_travel == "Business" | class == "Business"),
@@ -213,6 +216,9 @@ cat(sprintf(
 # missing values in later tests and summaries.
 nan_to_na <- function(x) if_else(is.nan(x), NA_real_, x)
 
+
+# Create composite scores for inflight, digital, and ground services
+# and delay category, and age groups for later RQ's
 df_clean <- df_clean |>
   mutate(
     inflight_comfort_score = nan_to_na(rowMeans(
@@ -241,7 +247,7 @@ df_clean <- df_clean |>
     ) |> factor(levels = c("Under 25", "25-40", "41-60", "Over 60"), ordered = TRUE)
   )
 
-# Encode Nominal and Ordered Categorical Factors
+# Encode Nominal and Ordered Categorical Factors for later RQ's
 df_clean <- df_clean |>
   mutate(
     gender = factor(gender, levels = c("Female", "Male")),
@@ -292,6 +298,8 @@ desc_vars <- c(
   "inflight_comfort_score", "digital_service_score", "ground_service_score"
 )
 
+# Creating descriptive statistics table for the continuous variables
+# for RQ1-RQ4 and general descriptives
 desc_table <- map_dfr(desc_vars, function(v) {
   x <- df_clean[[v]]
   x_valid <- x[!is.na(x)]
@@ -331,7 +339,7 @@ show_table("Frequency of each category", cat_summary, n = 25)
 # Save cleaned dataset for subsequent scripts
 saveRDS(df_clean, "output/cleaned_airline_satisfaction.rds")
 
-banner("STEP 3: GENERATING EDA CHARTS")
+banner("STEP 3: GENERATING EXPLORATORY DATA ANALYSIS (EDA) CHARTS")
 
 # Palette definitions (Colorblind-safe Navy / Teal / Coral / Slate)
 col_dissat <- "#D95F02" # Warm terracotta/orange for Neutral/Dissatisfied
@@ -340,17 +348,7 @@ col_navy <- "#2C3E50"
 col_blue <- "#2980B9"
 col_slate <- "#7F8C8D"
 
-# Helper to save high-res PNGs to output/figures
-save_figure_png <- function(filename, width = 9, height = 5.5, res = 300, plot_fn) {
-  out_path <- file.path("output/figures", filename)
-  png(out_path, width = width, height = height, units = "in", res = res)
-  tryCatch({
-    plot_fn()
-  }, finally = {
-    dev.off()
-  })
-  cat(sprintf("Saved chart: %s\n", filename))
-}
+# Figures are saved with save_figure_png() from scripts/console_helpers.R
 
 # ------------------------------------------------------------------------------
 # Figure 1: Data Hygiene Audit - "Not Applicable" (0) & Missing Value Counts

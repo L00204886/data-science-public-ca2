@@ -37,8 +37,10 @@ sample_idx <- df_clean |>
   slice_sample(prop = 5000 / nrow(df_clean), by = satisfaction) |>
   pull(row_id)
 
+# Creating a subset of the data for Shapiro-Wilk test to meet the 5000 row limit
 df_sub5000 <- df_clean[sample_idx, ]
 
+# Defining the variables to test for normality
 test_vars <- c(
   "online_boarding",
   "inflight_comfort_score",
@@ -50,6 +52,7 @@ test_vars <- c(
   "age"
 )
 
+# Running the tests for normality on the continuous variables using map_dfr
 normality_results <- map_dfr(test_vars, function(v) {
   x_full <- na.omit(df_clean[[v]])
   x_sub <- na.omit(df_sub5000[[v]])
@@ -88,6 +91,7 @@ homoscedasticity_specs <- list(
   list(rq = "RQ4: Arrival Delay ~ Satisfaction", fmla = arrival_delay ~ satisfaction)
 )
 
+# Running the tests for homogeneity of variances on the continuous variables using map_dfr
 variance_tests <- map_dfr(homoscedasticity_specs, function(s) {
   bt <- bartlett.test(s$fmla, data = df_clean)
   fk <- fligner.test(s$fmla, data = df_clean)
@@ -116,13 +120,15 @@ get_skew <- function(var_nm) {
   normality_results$skewness[normality_results$variable == var_nm]
 }
 
-png("output/figures/fig05_normality_qq_diagnostics.png", width = 10, height = 7, units = "in", res = 300)
-tryCatch({
-  par(mfrow = c(2, 2), mar = c(4.5, 4.5, 3.2, 1.5), family = "sans")
+# Creating Q-Q diagnostic plots for the continuous variables
+# Plot titles are automatically generated using the get_w and get_skew helper functions
+# Saving the plot to output/figures/fig05_normality_qq_diagnostics.png
+save_figure_png("fig05_normality_qq_diagnostics.png", width = 10, height = 7, plot_fn = function() {
+  par(mfrow = c(2, 2), mar = c(4.5, 4.5, 3.2, 1.5), family = "sans") # Setting up the plotting area to display four Q-Q plots in a 2x2 grid
 
   # A: Online Boarding Q-Q (Discrete Ordinal Staircase)
   qqnorm(df_sub5000$online_boarding,
-    pch = 16, cex = 0.5, col = rgb(0.17, 0.24, 0.31, 0.35),
+    pch = 16, cex = 0.5, col = rgb(0.17, 0.24, 0.31, 0.35), # Color 1 - blue tint
     main = sprintf(
       "A. Q-Q Plot: Online Boarding (Ordinal 1-5)\nShapiro-Wilk W = %.3f, p < 2.2e-16",
       get_w("online_boarding")
@@ -133,38 +139,35 @@ tryCatch({
 
   # B: Engineered In-Flight Comfort Score Q-Q
   qqnorm(df_sub5000$inflight_comfort_score,
-    pch = 16, cex = 0.5, col = rgb(0.11, 0.62, 0.47, 0.35),
+    pch = 16, cex = 0.5, col = rgb(0.11, 0.62, 0.47, 0.35), # Color 2 - green tint
     main = sprintf(
       "B. Q-Q Plot: Engineered In-Flight Comfort Score\nShapiro-Wilk W = %.3f, p < 2.2e-16",
       get_w("inflight_comfort_score")
     )
   )
-  qqline(df_sub5000$inflight_comfort_score, col = "#E74C3C", lwd = 2)
+  qqline(df_sub5000$inflight_comfort_score, col = "#E74C3C", lwd = 2) # Color 3 - red
   grid(col = "gray88", lty = "dotted")
 
   # C: Arrival Delay Q-Q (Severe Right Skew & Heavy Tail)
   qqnorm(df_sub5000$arrival_delay,
-    pch = 16, cex = 0.5, col = rgb(0.85, 0.37, 0.01, 0.35),
+    pch = 16, cex = 0.5, col = rgb(0.85, 0.37, 0.01, 0.35), # Color 4 - orange tint
     main = sprintf(
       "C. Q-Q Plot: Arrival Delay (Minutes)\nShapiro-Wilk W = %.3f, Skew = %.2f, p < 2.2e-16",
       get_w("arrival_delay"), get_skew("arrival_delay")
     )
   )
-  qqline(df_sub5000$arrival_delay, col = "#E74C3C", lwd = 2)
-  grid(col = "gray88", lty = "dotted")
+  qqline(df_sub5000$arrival_delay, col = "#E74C3C", lwd = 2) # Color 5 - red
+  grid(col = "gray88", lty = "dotted") # Adding a dotted grid to the plot for better readability
 
   # D: Flight Distance Q-Q
   qqnorm(df_sub5000$flight_distance,
-    pch = 16, cex = 0.5, col = rgb(0.16, 0.50, 0.73, 0.35),
+    pch = 16, cex = 0.5, col = rgb(0.16, 0.50, 0.73, 0.35), # Color 6 - blue tint
     main = sprintf(
       "D. Q-Q Plot: Flight Distance (Miles)\nShapiro-Wilk W = %.3f, Skew = %.2f, p < 2.2e-16",
       get_w("flight_distance"), get_skew("flight_distance")
     )
   )
-  qqline(df_sub5000$flight_distance, col = "#E74C3C", lwd = 2)
-  grid(col = "gray88", lty = "dotted")
-}, finally = {
-  dev.off()
+  qqline(df_sub5000$flight_distance, col = "#E74C3C", lwd = 2) # Color 7 - red
+  grid(col = "gray88", lty = "dotted") # Adding a dotted grid to the plot for better readability
 })
-cat("Saved chart: fig05_normality_qq_diagnostics.png\n")
 cat("Script 02_normality_and_assumptions.R completed successfully.\n")

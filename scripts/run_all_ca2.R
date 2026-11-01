@@ -4,10 +4,6 @@
 # Author:      Eamon Foy (L00204886)
 # Script:      run_all_ca2.R
 # Description: Master execution pipeline that runs all analysis scripts
-#              in sequence, with a clear heading per stage, execution timing
-#              and defensive root guards. Run from the project root:
-#                make run        (checks prerequisites first), or
-#                Rscript scripts/run_all_ca2.R
 # ==============================================================================
 
 # Defensive pre-flight check: ensure working directory is project root
