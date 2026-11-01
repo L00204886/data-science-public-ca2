@@ -1,8 +1,8 @@
 # CA2: Statistical Analysis and Hypothesis Testing of Airline Passenger Satisfaction
 
-**Module:** DATA_IT904 - Data Science (2026/27). 
-**Assessment:** CA 2 - Data Analysis (30% of the module). 
-**Author:** Eamon Foy (L00204886). 
+**Module:** DATA_IT904 - Data Science (2026/27).
+**Assessment:** CA 2 - Data Analysis (30% of the module).
+**Author:** Eamon Foy (L00204886).
 
 This repository holds the R scripts, outputs, tables/figures  for CA 2.
 All analysis is done in R.
@@ -16,13 +16,13 @@ dataset is the Kaggle *Airline Passenger Satisfaction* survey (Bhat, 2022), with
 
 Five research questions are tested, each with a different kind of variable:
 
-| RQ  | Question                                                                          | Test used                                     |
-| :-- | :-------------------------------------------------------------------------------- | :-------------------------------------------- |
-| RQ1 | Do satisfied passengers rate **online boarding** higher?                    | Wilcoxon rank-sum (Welch's t-test as a check) |
-| RQ2 | Is **type of travel** (business/personal) linked to satisfaction?           | Chi-square, Cramer's V, odds ratio            |
-| RQ3 | Does in-flight **comfort** differ across the three **cabin classes**? | Kruskal-Wallis with Bonferroni post-hoc tests |
-| RQ4 | Do dissatisfied passengers have longer **arrival delays**?                  | Wilcoxon rank-sum (Welch's t-test as a check) |
-| RQ5 | Are **departure and arrival delay** collinear?                              | Pearson and Spearman correlation, VIF         |
+| RQ  | Question                                                                          |
+| :-- | :-------------------------------------------------------------------------------- |
+| RQ1 | Do satisfied passengers rate **online boarding** higher?                    |
+| RQ2 | Is **type of travel** (business/personal) linked to satisfaction?           |
+| RQ3 | Does in-flight **comfort** differ across the three **cabin classes**? |
+| RQ4 | Do dissatisfied passengers have longer **arrival delays**?                  |
+| RQ5 | Are **departure and arrival delay** collinear?                              |
 
 The pipeline follows the report sections in the brief:
 
