@@ -165,8 +165,43 @@ df_clean <- df_clean |>
   ) |>
   mutate(n_not_applicable = rowSums(pick(ends_with("_na"))))
 
-cat("Passengers by number of 'Not Applicable' items:\n")
-print(table(df_clean$n_not_applicable))
+cat(sprintf(
+  "\n'Not Applicable' answers: a rating of 0 means the passenger did not use that service.\nThese 0s were recoded to NA across the %d survey rating items.\n",
+  length(likert_cols)
+))
+
+# Table : how many items each passenger skipped (0 = answered every item)
+skip_counts <- table(df_clean$n_not_applicable)
+skip_summary <- data.frame(
+  `Items marked N/A` = names(skip_counts),
+  Passengers = format(as.integer(skip_counts), big.mark = ","),
+  `% of passengers` = sprintf("%.1f%%", 100 * as.integer(skip_counts) / nrow(df_clean)),
+  check.names = FALSE
+)
+show_table("Passengers by how many of their survey items were 'Not Applicable'",
+  skip_summary,
+  row.names = FALSE
+)
+
+# Add summary info to the 'Not Applicable' section
+n_any_skip <- sum(df_clean$n_not_applicable > 0)
+cat(sprintf(
+  "-> %s of %s passengers (%.1f%%) marked at least one item N/A; no one marked more than %d.\n",
+  format(n_any_skip, big.mark = ","), format(nrow(df_clean), big.mark = ","),
+  100 * n_any_skip / nrow(df_clean), max(df_clean$n_not_applicable)
+))
+
+# Table : which survey items were marked N/A, most often first
+item_na <- sort(colSums(df_clean[paste0(likert_cols, "_na")]), decreasing = TRUE)
+item_na <- item_na[item_na > 0]
+item_pct <- 100 * as.integer(item_na) / nrow(df_clean)
+item_summary <- data.frame(
+  `Survey item` = sub("_na$", "", names(item_na)),
+  `Passengers marking N/A` = format(as.integer(item_na), big.mark = ","),
+  `% of passengers` = ifelse(item_pct < 0.01, "<0.01%", sprintf("%.2f%%", item_pct)),
+  check.names = FALSE
+)
+show_table("Survey items most often marked 'Not Applicable'", item_summary, row.names = FALSE)
 
 # Data-quality flags (rows are flagged, not deleted)
 # - flag_minor_business: under-16s recorded as Business travel or class
