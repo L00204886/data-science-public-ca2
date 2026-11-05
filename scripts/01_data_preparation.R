@@ -75,7 +75,7 @@ likert_cols <- c(
   "inflight_entertainment",
   "baggage_handling"
 )
-
+# Create hygiene audit tibble with raw column names and NA/zero counts
 hygiene_audit <- tibble(
   variable = colnames(df),
   raw_name = colnames(raw_df),
@@ -88,6 +88,7 @@ hygiene_audit <- tibble(
   zero_pct = round(zero_count / nrow(df) * 100, 3)
 )
 
+# Display hygiene audit and save to file
 write_csv(hygiene_audit, "output/tables/01_hygiene_audit.csv")
 show_table("Columns with missing (NA) or Not Applicable (0) values",
   hygiene_audit |> filter(na_count > 0 | zero_count > 0),
