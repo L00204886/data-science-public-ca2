@@ -25,6 +25,7 @@ source("scripts/console_helpers.R")
 
 df_clean <- readRDS("output/cleaned_airline_satisfaction.rds")
 
+# Same group colours as script 01
 col_dissat <- "#D95F02"
 col_sat <- "#1B9E77"
 
@@ -238,7 +239,7 @@ show_table("Summary of all five hypothesis tests", hypothesis_summary, width = 1
 banner("GENERATING HYPOTHESIS TEST RESULT CHARTS (FIGURES 6-8)")
 
 # ------------------------------------------------------------------------------
-# Figure 6: RQ1 & RQ2 Results Visualization
+# Figure 6: RQ1 & RQ2 Results
 # ------------------------------------------------------------------------------
 save_figure_png("fig06_rq1_rq2_results.png", width = 10, height = 5.2, plot_fn = function() {
   old_par <- par(no.readonly = TRUE)
@@ -282,7 +283,7 @@ save_figure_png("fig06_rq1_rq2_results.png", width = 10, height = 5.2, plot_fn =
 })
 
 # ------------------------------------------------------------------------------
-# Figure 7: RQ3 & RQ4 Results Visualization
+# Figure 7: RQ3 & RQ4 Results
 # ------------------------------------------------------------------------------
 save_figure_png("fig07_rq3_rq4_results.png", width = 10, height = 5.2, plot_fn = function() {
   old_par <- par(no.readonly = TRUE)
@@ -320,7 +321,7 @@ save_figure_png("fig07_rq3_rq4_results.png", width = 10, height = 5.2, plot_fn =
     names.arg = c("On Time\n(0m)", "Minor Delay\n(1-15m)", "Major Delay\n(>15m)"),
     xlab = "Arrival Delay Regime (Minutes)",
     ylab = "Percentage within Delay Regime (%)",
-    # Title values are computed (not hard-coded) so they always match the data
+    # Panel B title values come from the test results, not typed in
     main = sprintf(
       "B. RQ4: Arrival Delay vs. Satisfaction\n(Mean: %.1fm vs %.1fm, t = %.1f, r_rb = %.3f)",
       mean(d_dissat), mean(d_sat), rq4_ttest_two$statistic, r_rb_rq4
@@ -338,7 +339,7 @@ save_figure_png("fig08_rq5_correlation_and_collinearity.png", width = 10, height
   on.exit(par(old_par), add = TRUE)
   par(mfrow = c(1, 2), mar = c(4.8, 4.8, 3.5, 1.5), family = "sans")
 
-  # Panel A: Departure vs Arrival Delay Scatterplot (Random 5,000 points for visual clarity + full OLS line)
+  # Panel A: 5,000 random flights keep the scatter readable; the OLS line uses all rows
   set.seed(42)
   sub_idx <- sample(seq_len(nrow(rq5_df)), 5000)
   plot(

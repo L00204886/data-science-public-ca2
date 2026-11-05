@@ -6,6 +6,7 @@
 # Description: Helper functions used in CA2 scripts
 # ==============================================================================
 
+# Wide console so tables are not wrapped
 options(width = 150, tibble.width = 150)
 
 banner <- function(txt) {
@@ -32,7 +33,7 @@ save_figure_png <- function(filename, width = 9, height = 5.5, res = 300, plot_f
 }
 
 # --------------------------------------------------------------------------------------
-# Effect-size helpers used by RQ1 and RQ4
+# Effect sizes and p-value text (scripts 03 and 04)
 # --------------------------------------------------------------------------------------
 
 # Rank-biserial correlation from the Wilcoxon U statistic: r_rb = 2U / (n1 * n2) - 1
@@ -65,5 +66,5 @@ rank_biserial <- function(x, y) {
   2 * as.numeric(w$statistic) / (as.numeric(length(x)) * as.numeric(length(y))) - 1
 }
 
-# Calculates satisfaction percentage
+# % of passengers who are Satisfied
 sat_rate <- function(s) mean(s == "Satisfied") * 100

@@ -37,10 +37,8 @@ sample_idx <- df_clean |>
   slice_sample(prop = 5000 / nrow(df_clean), by = satisfaction) |>
   pull(row_id)
 
-# Creating a subset of the data for Shapiro-Wilk test to meet the 5000 row limit
 df_sub5000 <- df_clean[sample_idx, ]
 
-# Defining the variables to test for normality
 test_vars <- c(
   "online_boarding",
   "inflight_comfort_score",
@@ -52,7 +50,7 @@ test_vars <- c(
   "age"
 )
 
-# Running the tests for normality on the continuous variables using map_dfr
+# One row of normality results per variable
 normality_results <- map_dfr(test_vars, function(v) {
   x_full <- na.omit(df_clean[[v]])
   x_sub <- na.omit(df_sub5000[[v]])
@@ -60,7 +58,7 @@ normality_results <- map_dfr(test_vars, function(v) {
   if (length(x_sub) > 5000) x_sub <- x_sub[1:5000]
 
   sw <- shapiro.test(x_sub)
-  # Standardised KS test against standard normal N(0,1) using fast vector arithmetic
+  # KS test of the standardised values against a standard normal N(0,1)
   x_z <- (x_full - mean(x_full)) / sd(x_full)
   ks <- suppressWarnings(ks.test(x_z, "pnorm"))
 
@@ -82,16 +80,16 @@ show_table("Normality tests (one row per variable)", normality_results, width = 
 
 banner("STEP 2: HOMOGENEITY OF VARIANCE TESTS (HOMOSCEDASTICITY)")
 
-# Test equal variances across groups for RQ1, RQ3, and RQ4 using:
+# Test equal variances for the RQ1, RQ3 and RQ4 group comparisons:
 # 1. Bartlett's test (parametric, sensitive to non-normality)
-# 2. Fligner-Killeen test (non-parametric rank-based test of homogeneity of variances)
+# 2. Fligner-Killeen test (rank-based, so robust to non-normality)
 homoscedasticity_specs <- list(
   list(rq = "RQ1: Online Boarding ~ Satisfaction", fmla = online_boarding ~ satisfaction),
   list(rq = "RQ3: Inflight Comfort Score ~ Cabin Class", fmla = inflight_comfort_score ~ class),
   list(rq = "RQ4: Arrival Delay ~ Satisfaction", fmla = arrival_delay ~ satisfaction)
 )
 
-# Running the tests for homogeneity of variances on the continuous variables using map_dfr
+# One row of variance results per research question
 variance_tests <- map_dfr(homoscedasticity_specs, function(s) {
   bt <- bartlett.test(s$fmla, data = df_clean)
   fk <- fligner.test(s$fmla, data = df_clean)
@@ -112,7 +110,7 @@ show_table("Equal-variance tests (one row per research question)", variance_test
 
 banner("STEP 3: GENERATING Q-Q DIAGNOSTIC PLOTS ")
 
-# Helper functions to pull exact test values from the normality table for the plot titles
+# Look up W and skewness for a variable, so plot titles use the real values
 get_w <- function(var_nm) {
   normality_results$shapiro_W_n5000[normality_results$variable == var_nm]
 }
@@ -120,15 +118,14 @@ get_skew <- function(var_nm) {
   normality_results$skewness[normality_results$variable == var_nm]
 }
 
-# Creating Q-Q diagnostic plots for the continuous variables
-# Plot titles are automatically generated using the get_w and get_skew helper functions
-# Saving the plot to output/figures/fig05_normality_qq_diagnostics.png
+# Figure 5: Q-Q plots for four variables (2x2 grid), drawn from the 5,000-row sample.
+# Points are semi-transparent; the red line is where normal data would fall.
 save_figure_png("fig05_normality_qq_diagnostics.png", width = 10, height = 7, plot_fn = function() {
-  par(mfrow = c(2, 2), mar = c(4.5, 4.5, 3.2, 1.5), family = "sans") # Setting up the plotting area to display four Q-Q plots in a 2x2 grid
+  par(mfrow = c(2, 2), mar = c(4.5, 4.5, 3.2, 1.5), family = "sans")
 
   # A: Online Boarding Q-Q (Discrete Ordinal Staircase)
   qqnorm(df_sub5000$online_boarding,
-    pch = 16, cex = 0.5, col = rgb(0.17, 0.24, 0.31, 0.35), # Color 1 - blue tint
+    pch = 16, cex = 0.5, col = rgb(0.17, 0.24, 0.31, 0.35),
     main = sprintf(
       "A. Q-Q Plot: Online Boarding (Ordinal 1-5)\nShapiro-Wilk W = %.3f, p < 2.2e-16",
       get_w("online_boarding")
@@ -139,35 +136,35 @@ save_figure_png("fig05_normality_qq_diagnostics.png", width = 10, height = 7, pl
 
   # B: Engineered In-Flight Comfort Score Q-Q
   qqnorm(df_sub5000$inflight_comfort_score,
-    pch = 16, cex = 0.5, col = rgb(0.11, 0.62, 0.47, 0.35), # Color 2 - green tint
+    pch = 16, cex = 0.5, col = rgb(0.11, 0.62, 0.47, 0.35),
     main = sprintf(
       "B. Q-Q Plot: Engineered In-Flight Comfort Score\nShapiro-Wilk W = %.3f, p < 2.2e-16",
       get_w("inflight_comfort_score")
     )
   )
-  qqline(df_sub5000$inflight_comfort_score, col = "#E74C3C", lwd = 2) # Color 3 - red
+  qqline(df_sub5000$inflight_comfort_score, col = "#E74C3C", lwd = 2)
   grid(col = "gray88", lty = "dotted")
 
   # C: Arrival Delay Q-Q (Severe Right Skew & Heavy Tail)
   qqnorm(df_sub5000$arrival_delay,
-    pch = 16, cex = 0.5, col = rgb(0.85, 0.37, 0.01, 0.35), # Color 4 - orange tint
+    pch = 16, cex = 0.5, col = rgb(0.85, 0.37, 0.01, 0.35),
     main = sprintf(
       "C. Q-Q Plot: Arrival Delay (Minutes)\nShapiro-Wilk W = %.3f, Skew = %.2f, p < 2.2e-16",
       get_w("arrival_delay"), get_skew("arrival_delay")
     )
   )
-  qqline(df_sub5000$arrival_delay, col = "#E74C3C", lwd = 2) # Color 5 - red
-  grid(col = "gray88", lty = "dotted") # Adding a dotted grid to the plot for better readability
+  qqline(df_sub5000$arrival_delay, col = "#E74C3C", lwd = 2)
+  grid(col = "gray88", lty = "dotted")
 
   # D: Flight Distance Q-Q
   qqnorm(df_sub5000$flight_distance,
-    pch = 16, cex = 0.5, col = rgb(0.16, 0.50, 0.73, 0.35), # Color 6 - blue tint
+    pch = 16, cex = 0.5, col = rgb(0.16, 0.50, 0.73, 0.35),
     main = sprintf(
       "D. Q-Q Plot: Flight Distance (Miles)\nShapiro-Wilk W = %.3f, Skew = %.2f, p < 2.2e-16",
       get_w("flight_distance"), get_skew("flight_distance")
     )
   )
-  qqline(df_sub5000$flight_distance, col = "#E74C3C", lwd = 2) # Color 7 - red
-  grid(col = "gray88", lty = "dotted") # Adding a dotted grid to the plot for better readability
+  qqline(df_sub5000$flight_distance, col = "#E74C3C", lwd = 2)
+  grid(col = "gray88", lty = "dotted")
 })
 cat("Script 02_normality_and_assumptions.R completed successfully.\n")

@@ -40,8 +40,8 @@ banner("S1: IS 'NOT APPLICABLE' MISSINGNESS INFORMATIVE?")
 missing_info <- map_dfr(likert_cols, function(col) {
   flag <- df_clean[[paste0(col, "_na")]]
   if (sum(flag) == 0) {
-    return(NULL)
-  } # no 0s for this item, so it is left out of the table
+    return(NULL) # no 0s for this item, so leave it out of the table
+  }
   tab <- table(flag, df_clean$satisfaction)
   tibble(
     item = col,

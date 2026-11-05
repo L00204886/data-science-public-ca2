@@ -6,7 +6,7 @@
 # Description: Master execution pipeline that runs all analysis scripts
 # ==============================================================================
 
-# Defensive pre-flight check: ensure working directory is project root
+# Stop early unless run from the project root
 if (!file.exists("data/airline_passenger_satisfaction.csv")) {
   stop("Please run this script from the project root directory.")
 }

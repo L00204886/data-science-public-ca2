@@ -8,8 +8,7 @@
 #                1. Audit missing (NA) values and "0" (Not Applicable) ratings
 #                2. Clean: regression-impute arrival_delay, recode 0 -> NA (keeping
 #                   indicator flags), flag implausible rows, build new variables
-#                3. Check composite reliability and save the
-#                   descriptive tables
+#                3. Check composite reliability and save descriptive tables
 #                4. Draw the exploratory charts (Figures 1-4)
 # Reads:       data/airline_passenger_satisfaction.csv
 # Writes:      output/cleaned_airline_satisfaction.rds (used by scripts 02-04),
@@ -28,7 +27,7 @@ suppressPackageStartupMessages({
 
 source("scripts/console_helpers.R")
 
-# Ensure output directories exist
+# Create the output folders if they are missing
 dir.create("output/tables", recursive = TRUE, showWarnings = FALSE)
 dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
 
@@ -58,7 +57,7 @@ colnames(df) <- clean_col_names(colnames(df))
 dup_ids <- sum(duplicated(df$id))
 cat(sprintf("Duplicate Passenger IDs: %d\n", dup_ids))
 
-# Audit raw missing (NA) and "0" (Not Applicable) codes in Likert ratings
+# The 14 Likert service ratings (1-5, where 0 = Not Applicable)
 likert_cols <- c(
   "departure_and_arrival_time_convenience",
   "ease_of_online_booking",
@@ -75,7 +74,7 @@ likert_cols <- c(
   "inflight_entertainment",
   "baggage_handling"
 )
-# Create hygiene audit tibble with raw column names and NA/zero counts
+# Count NAs and 0s per column (0s only matter for the Likert items)
 hygiene_audit <- tibble(
   variable = colnames(df),
   raw_name = colnames(raw_df),
@@ -88,7 +87,7 @@ hygiene_audit <- tibble(
   zero_pct = round(zero_count / nrow(df) * 100, 3)
 )
 
-# Display hygiene audit and save to file
+# Save the audit; print only problem columns
 write_csv(hygiene_audit, "output/tables/01_hygiene_audit.csv")
 show_table("Columns with missing (NA) or Not Applicable (0) values",
   hygiene_audit |> filter(na_count > 0 | zero_count > 0),
@@ -97,7 +96,7 @@ show_table("Columns with missing (NA) or Not Applicable (0) values",
 
 banner("STEP 2: CLEANING, IMPUTATION & FEATURE ENGINEERING")
 
-# Drop non-predictive identifier column (id)
+# Drop the passenger id (not needed for analysis)
 df_clean <- df |> select(-id)
 
 # Handle the 393 missing values in arrival_delay
@@ -105,7 +104,7 @@ df_clean <- df |> select(-id)
 # flights have a median departure delay of 8 mins. Departure and arrival delay
 # are almost perfectly linear (r ~ 0.965, see RQ5), so I impute by regression:
 #     arrival_delay = b0 + b1 * departure_delay
-# fitted on the complete rows, rounded and floored at 0 (the data has no
+# fitted on the complete rows, rounded and floored at 0 (the data contain no
 # negative delays). The raw column is kept as arrival_delay_raw (for RQ5) and a
 # median-imputed copy as arrival_delay_median_imp (for the sensitivity check in
 # script 04).
@@ -125,7 +124,7 @@ cat(sprintf(
   length(na_arr_dep), median(na_arr_dep), mean(na_arr_dep)
 ))
 
-# Create a linear regression model to predict arrival delay based on departure delay
+# Fit the imputation model on the complete rows
 impute_model <- lm(arrival_delay ~ departure_delay, data = df_clean)
 b_imp <- coef(impute_model)
 cat(sprintf(
@@ -133,7 +132,7 @@ cat(sprintf(
   b_imp[1], b_imp[2], summary(impute_model)$r.squared
 ))
 
-# Perform the imputation
+# Impute the 393 missing arrival delays
 df_clean <- df_clean |>
   mutate(
     arrival_delay_raw = arrival_delay, # untouched original (393 NAs)
@@ -161,7 +160,7 @@ df_clean <- df_clean |>
   mutate(
     # One indicator column per Likert item, e.g. inflight_wifi_service_na
     across(all_of(likert_cols), ~ .x == 0, .names = "{.col}_na"),
-    # Recode the 0s themselves to NA using native dplyr::na_if
+    # Recode the 0s themselves to NA
     across(all_of(likert_cols), ~ na_if(as.numeric(.x), 0))
   ) |>
   mutate(n_not_applicable = rowSums(pick(ends_with("_na"))))
@@ -171,7 +170,7 @@ cat(sprintf(
   length(likert_cols)
 ))
 
-# Table : how many items each passenger skipped (0 = answered every item)
+# Table 1: how many items each passenger skipped (0 = answered every item)
 skip_counts <- table(df_clean$n_not_applicable)
 skip_summary <- data.frame(
   `Items marked N/A` = names(skip_counts),
@@ -184,7 +183,7 @@ show_table("Passengers by how many of their survey items were 'Not Applicable'",
   row.names = FALSE
 )
 
-# Add summary info to the 'Not Applicable' section
+# One-line summary: how many passengers skipped anything at all
 n_any_skip <- sum(df_clean$n_not_applicable > 0)
 cat(sprintf(
   "-> %s of %s passengers (%.1f%%) marked at least one item N/A; no one marked more than %d.\n",
@@ -192,7 +191,7 @@ cat(sprintf(
   100 * n_any_skip / nrow(df_clean), max(df_clean$n_not_applicable)
 ))
 
-# Table : which survey items were marked N/A, most often first
+# Table 2: which survey items were marked N/A, most often first
 item_na <- sort(colSums(df_clean[paste0(likert_cols, "_na")]), decreasing = TRUE)
 item_na <- item_na[item_na > 0]
 item_pct <- 100 * as.integer(item_na) / nrow(df_clean)
@@ -209,13 +208,13 @@ show_table("Survey items most often marked 'Not Applicable'", item_summary, row.
 #   (implausible, possibly data-entry errors).
 # - flag_straight_liner: same rating given to every answered item (low effort).
 # Their effect on the results is checked in script 04.
-# Vectorized row-comparison via pmin/pmax
+# Straight-liner = lowest rating equals highest rating.
 likert_sub <- df_clean[, likert_cols]
 n_answered <- rowSums(!is.na(likert_sub))
 r_min <- do.call(pmin, c(likert_sub, na.rm = TRUE))
 r_max <- do.call(pmax, c(likert_sub, na.rm = TRUE))
 
-# Apply the flags to remove implausible rows
+# Add the two flag columns (no rows are removed)
 df_clean <- df_clean |>
   mutate(
     flag_minor_business = age < 16 & (type_of_travel == "Business" | class == "Business"),
@@ -229,8 +228,8 @@ cat(sprintf(
 # Capped arrival delay for outlier sensitivity checks
 # ------------------------------------------------------------------------------
 # Around 300 flights have delays > 5 hours (max 1,584 mins). Rank-based tests are
-# robust to these, but means and t-tests are not. I created a copy capped at the
-# 99th percentile so RQ4 can be re-run without extreme outlier leverage.
+# robust to these, but means and t-tests are not. A copy capped at the 99th
+# percentile lets RQ4 be re-run without the extreme values.
 # ------------------------------------------------------------------------------
 cap_p99 <- quantile(df_clean$arrival_delay, 0.99)
 df_clean <- df_clean |>
@@ -240,21 +239,20 @@ cat(sprintf(
   cap_p99, sum(df_clean$arrival_delay > cap_p99)
 ))
 
-# Feature Engineering
-# - inflight_comfort_score: composite mean of Seat Comfort, Leg Room Service, Cleanliness, Inflight Entertainment (RQ3)
-# - digital_service_score: composite mean of Ease of Online Booking, Online Boarding, Inflight Wifi Service
-# - ground_service_score: composite mean of Gate Location, Checkin Service, Baggage Handling, Time Convenience
-# - delay_category: FAA standard 15-minute operational delay threshold (RQ4)
-# - age_group: Demographic life-stage brackets
-# NOTE ON NaN: rowMeans(..., na.rm = TRUE) returns NaN ("not a number") when
-# EVERY item in the row is NA (it divides 0 by 0). 1,603 passengers skipped all
-# three digital items, so I converted NaN -> NA so R treats them as ordinary
+# Feature engineering
+# - inflight_comfort_score: mean of Seat Comfort, Leg Room Service, Cleanliness, Inflight Entertainment (RQ3)
+# - digital_service_score: mean of Ease of Online Booking, Online Boarding, Inflight Wifi Service
+# - ground_service_score: mean of Gate Location, Checkin Service, Baggage Handling, Time Convenience
+# - delay_category: On Time / Minor / Major, using the FAA 15-minute delay threshold (RQ4)
+# - age_group: four age bands
+# NaN: rowMeans(..., na.rm = TRUE) returns NaN ("not a number") when every
+# item in the row is NA (it divides 0 by 0). 1,603 passengers skipped all
+# three digital items, so NaN is converted to NA so R treats them as ordinary
 # missing values in later tests and summaries.
 nan_to_na <- function(x) if_else(is.nan(x), NA_real_, x)
 
 
-# Create composite scores for inflight, digital, and ground services
-# and delay category, and age groups for later RQ's
+# Build the composite scores, delay category and age groups
 df_clean <- df_clean |>
   mutate(
     inflight_comfort_score = nan_to_na(rowMeans(
@@ -283,7 +281,7 @@ df_clean <- df_clean |>
     ) |> factor(levels = c("Under 25", "25-40", "41-60", "Over 60"), ordered = TRUE)
   )
 
-# Encode Nominal and Ordered Categorical Factors for later RQ's
+# Set factor levels; class is ordered (Economy < Economy Plus < Business)
 df_clean <- df_clean |>
   mutate(
     gender = factor(gender, levels = c("Female", "Male")),
@@ -334,8 +332,7 @@ desc_vars <- c(
   "inflight_comfort_score", "digital_service_score", "ground_service_score"
 )
 
-# Creating descriptive statistics table for the continuous variables
-# for RQ1-RQ4 and general descriptives
+# One row per variable: continuous measures, Likert items and composites
 desc_table <- map_dfr(desc_vars, function(v) {
   x <- df_clean[[v]]
   x_valid <- x[!is.na(x)]
@@ -377,9 +374,9 @@ saveRDS(df_clean, "output/cleaned_airline_satisfaction.rds")
 
 banner("STEP 3: GENERATING EXPLORATORY DATA ANALYSIS (EDA) CHARTS")
 
-# Palette definitions (Colorblind-safe Navy / Teal / Coral / Slate)
-col_dissat <- "#D95F02" # Warm terracotta/orange for Neutral/Dissatisfied
-col_sat <- "#1B9E77" # Deep teal/green for Satisfied
+# Colour-blind-safe palette
+col_dissat <- "#D95F02" # orange: Neutral or Dissatisfied
+col_sat <- "#1B9E77" # teal: Satisfied
 col_navy <- "#2C3E50"
 col_blue <- "#2980B9"
 col_slate <- "#7F8C8D"
@@ -457,12 +454,12 @@ save_figure_png("fig02_service_ratings_by_satisfaction.png", width = 10, height 
   grid(nx = NULL, ny = NULL, col = "gray90", lty = "dotted")
   axis(2, at = y_pos, labels = means_df$label, las = 1, cex.axis = 0.85)
 
-  # Draw connecting segments (dumbbell plot)
+  # Dumbbell plot: a line joins each item's two group means
   segments(means_df$dissat_mean, y_pos, means_df$sat_mean, y_pos, col = "gray55", lwd = 2.5)
   points(means_df$dissat_mean, y_pos, pch = 19, col = col_dissat, cex = 1.4)
   points(means_df$sat_mean, y_pos, pch = 19, col = col_sat, cex = 1.4)
 
-  # Annotate gap values
+  # Label each line with the gap (Satisfied minus Dissatisfied)
   text(
     x = (means_df$dissat_mean + means_df$sat_mean) / 2,
     y = y_pos + 0.30,
@@ -481,12 +478,12 @@ save_figure_png("fig02_service_ratings_by_satisfaction.png", width = 10, height 
 })
 
 # ------------------------------------------------------------------------------
-# Figure 3: Multi-Panel Demographic & Travel Regime Breakdown (a 2x2 Panel)
+# Figure 3: Satisfaction by Group (2x2 panel)
 # ------------------------------------------------------------------------------
 save_figure_png("fig03_categorical_satisfaction_breakdown.png", width = 10, height = 7, plot_fn = function() {
   par(mfrow = c(2, 2), mar = c(4.5, 4.5, 3, 1.5), family = "sans")
 
-  # Panel A: Overall Target Balance
+  # Panel A: overall split of Satisfied vs Neutral/Dissatisfied
   tab_ov <- table(df_clean$satisfaction)
   pct_ov <- prop.table(tab_ov) * 100
   bp1 <- barplot(
@@ -554,7 +551,7 @@ save_figure_png("fig04_continuous_distributions.png", width = 10, height = 7, pl
     mean(df_clean$flight_distance), median(df_clean$flight_distance), e1071::skewness(df_clean$flight_distance)
   ), bty = "n", cex = 0.85)
 
-  # C: Log10(Arrival Delay + 1) to show extreme right skew
+  # C: log10(arrival delay + 1); the raw values are too skewed to plot
   hist(log10(df_clean$arrival_delay + 1),
     breaks = 35, col = "#E67E22", border = "white",
     main = "C. Arrival Delay (log scale)", xlab = "log10(Arrival Delay + 1)", ylab = "Frequency"
@@ -564,7 +561,7 @@ save_figure_png("fig04_continuous_distributions.png", width = 10, height = 7, pl
     mean(df_clean$arrival_delay), median(df_clean$arrival_delay), e1071::skewness(df_clean$arrival_delay)
   ), bty = "n", cex = 0.85)
 
-  # D: Engineered In-Flight Comfort Score by Class (Boxplot)
+  # D: In-flight comfort score by class (boxplot)
   boxplot(inflight_comfort_score ~ class,
     data = df_clean,
     col = c("#BDC3C7", "#5DADE2", "#1B9E77"),
